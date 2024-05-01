@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "707619820892",
+    "project_id": "mapsappogg",
+    "storage_bucket": "mapsappogg.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:707619820892:android:13c9fabaec6dae55b11d99",
+        "android_client_info": {
+          "package_name": "com.example.mapsappogg"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLHyxw9ozh0h9SLMlcuIe4EJL76DxHQX4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

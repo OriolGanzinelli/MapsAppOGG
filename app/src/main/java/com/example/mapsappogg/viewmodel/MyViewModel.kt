@@ -1,0 +1,261 @@
+package com.example.mapsappogg.viewmodel
+
+import android.net.Uri
+import android.util.Log
+import androidx.core.net.toUri
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import com.example.mapsappogg.models.Marker
+import com.example.mapsappogg.models.Repository
+import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentChange
+import com.google.firebase.firestore.EventListener
+import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.storage.FirebaseStorage
+import com.google.maps.android.compose.MapType
+
+class MyViewModel: ViewModel() {
+
+    // ---------------------------------------------------------- VARIABLES IMMUTABLES PRIVADES -----------------------------------------------------------------------
+    private val repository: Repository = Repository()
+    private val auth = FirebaseAuth.getInstance()
+    private val _trafficEnabled = MutableLiveData(false)
+    private val _selectedMarker = MutableLiveData<Marker?>(null)
+    private val _selectedLocation = MutableLiveData(LatLng(0.0, 0.0))
+    private val _selectedImage = MutableLiveData<Uri?>(null)
+    private val _imageUrl = MutableLiveData<Uri?>(null)
+    private val _markerReady = MutableLiveData(false)
+    private val _userEnterError = MutableLiveData(false)
+    private val _bottomSheet = MutableLiveData(false)
+    private val _goToNext = MutableLiveData(false)
+    private val _isProcessing = MutableLiveData(true)
+    private val _userId = MutableLiveData<String?>(null)
+    private val _loggedUser = MutableLiveData<String?>(null)
+    private val _listOfMarkers = MutableLiveData(mutableListOf<Marker>())
+    private val mapTypes = listOf(MapType.NORMAL, MapType.SATELLITE, MapType.TERRAIN, MapType.HYBRID)
+    private val _selectedMapTypeIndex = MutableLiveData(MapType.TERRAIN)
+    private val _cameraPermissionGranted = MutableLiveData(false)
+    private val _shouldShowPermissionRationale = MutableLiveData(false)
+    private val _showPermissionDenied = MutableLiveData(false)
+    private val _locationPermissionGranted = MutableLiveData(false)
+    private val _shouldShowLocationPermissionRationale = MutableLiveData(false)
+    private val _locationPermissionDenied = MutableLiveData(false)
+
+    // ---------------------------------------------------------- VARIABLES IMMUTABLES -----------------------------------------------------------------------
+
+    val trafficEnabled = _trafficEnabled
+    val selectedMarker = _selectedMarker
+    val selectedLocation = _selectedLocation
+    val selectedImage = _selectedImage
+    val imageUrl = _imageUrl
+    val markerReady = _markerReady
+    val userEnterError = _userEnterError
+    val bottomSheet = _bottomSheet
+    val goToNext = _goToNext
+    val isProcessing = _isProcessing
+    val userId = _userId
+    val loggedUser = _loggedUser
+    val listOfMarkers = _listOfMarkers
+    val selectedMapType = _selectedMapTypeIndex
+    val showPermissionDenied = _showPermissionDenied
+    val locationPermissionGranted = _locationPermissionGranted
+    val shouldShowLocationPermissionRationale = _shouldShowLocationPermissionRationale
+    val locationPermissionDenied = _locationPermissionDenied
+
+    // ---------------------------------------------------------- BUSCAR MARCADORS -----------------------------------------------------------------------
+    private val _isSearching = MutableLiveData(false)
+    val isSearching = _isSearching
+    private val _searchText = MutableLiveData("")
+    val searchText = _searchText
+
+    private val _filterColors = MutableLiveData(listOf<Float>())
+    val filterColors = _filterColors
+
+    private val _isFiltering = MutableLiveData(false)
+    val isFiltering = _isFiltering
+    fun enableTraffic() {
+        _trafficEnabled.value = !_trafficEnabled.value!!
+    }
+
+    // ---------------------------------------------------------- BUSCAR MARCADORS PER NOM -----------------------------------------------------------------------
+    fun onSearchTextChange(text: String){
+        _searchText.value = text
+    }
+
+    fun confirmMarkerReady(save: Boolean) {
+        _markerReady.value = save
+    }
+    fun getSavedMarkers(){
+        var getMarkers = repository.getMarkers().whereEqualTo("userId", userId.value)
+        if (filterColors.value!!.isNotEmpty()) getMarkers = getMarkers.whereIn("markerColor", filterColors.value!!)
+
+        getMarkers.addSnapshotListener(object: EventListener<QuerySnapshot> {
+            override fun onEvent(value: QuerySnapshot?, error: FirebaseFirestoreException?) {
+                if(error != null){
+                    Log.e("Firestore error", error.message.toString())
+                    return //@addSnapshotListener
+                }
+                val tempList = mutableListOf<Marker>()
+                for(dc: DocumentChange in value?.documentChanges!!){
+                    if(dc.type == DocumentChange.Type.ADDED){
+                        val newMarker = Marker(
+                            dc.document.get("userId").toString(),
+                            dc.document.id,
+                            LatLng(dc.document.get("markerLatitude")!!.toString().toDouble(),
+                                dc.document.get("markerLongitude")!!.toString().toDouble()),
+                            dc.document.get("markerTitle")!!.toString(),
+                            dc.document.get("markerSnippet")!!.toString(),
+                            dc.document.get("markerColor")!!.toString().toFloat(),
+                            dc.document.get("markerPhoto")?.toString()
+                        )
+                        //.toObject(MyMarker::class.java) NO FUNCIONA
+                        tempList.add(newMarker)
+
+                    }
+                }
+                _listOfMarkers.value = tempList
+            }
+        })
+    }
+
+    fun selectMarker(marker: Marker?) {
+        _selectedMarker.value = marker
+    }
+
+    fun setUserEnterError(error: Boolean) {
+        _userEnterError.value = error
+    }
+
+    fun changeCurrentLocation(position: LatLng) {
+        _selectedLocation.value = position
+    }
+
+    fun selectImage(image: Uri?) {
+        _selectedImage.value = image
+    }
+
+    fun selectImageUrl(imageUrl: Uri?) {
+        _imageUrl.value = imageUrl
+    }
+
+    fun changeMapType(index: Int) {
+        this._selectedMapTypeIndex.value = mapTypes[index]
+    }
+
+    fun setCameraPermissionGranted(granted: Boolean) {
+        this._cameraPermissionGranted.value = granted
+    }
+    fun setShouldPermissionRationale(should: Boolean) {
+        _shouldShowPermissionRationale.value = should
+    }
+    fun setShowPermissionDenied(denied: Boolean) {
+        _showPermissionDenied.value = denied
+    }
+
+    fun setLocationPermissionGranted(granted: Boolean) {
+        this._locationPermissionGranted.value = granted
+    }
+    fun setShouldLocationPermissionRationale(should: Boolean) {
+        _shouldShowLocationPermissionRationale.value = should
+    }
+    fun setShowLocationPermissionDenied(denied: Boolean) {
+        _locationPermissionDenied.value = denied
+    }
+
+    fun saveMarker(newMarker: Marker) {
+        repository.saveMarker(newMarker)
+    }
+
+    fun editMarker(editedMarker: Marker) {
+        repository.editMarker(editedMarker)
+    }
+
+    fun deleteMarker(deletedMarker: Marker) {
+        repository.deleteMarker(deletedMarker)
+    }
+
+    fun showBottomSheet() { _bottomSheet.value = true }
+    fun hideBottomSheet() {
+        _bottomSheet.value = false
+        selectImage(null)
+    }
+
+    fun uploadImage(imageUri: Uri?, fileName: String, deleteUrl: String?) {
+        val storage = FirebaseStorage.getInstance().getReference("images/$fileName")
+        storage.putFile(imageUri?: "null".toUri())
+            .addOnSuccessListener {
+                Log.i("IMAGE UPLOAD", "Image uploaded successfully")
+                storage.downloadUrl.addOnSuccessListener {
+                    println("Image saved in Storage: $it")
+                    selectImageUrl(it)
+                    if (deleteUrl != null && deleteUrl != "null") removeImage(deleteUrl)
+                    confirmMarkerReady(true)
+                }
+            }
+            .addOnFailureListener {
+                Log.i("IMAGE UPLOAD", "Image upload failed")
+                selectImageUrl(deleteUrl?.toUri())
+                confirmMarkerReady(true)
+            }
+    }
+
+    fun removeImage(url: String) {
+        try {
+            val storage = FirebaseStorage.getInstance().getReferenceFromUrl(url)
+            storage.delete()
+        } catch (_: IllegalArgumentException) {
+            Log.i("removeImage", "Caught an IllegalArgumentException (probably tried to remove a null image)")
+        }
+
+    }
+
+    fun login(username: String?, password: String?) {
+        auth.signInWithEmailAndPassword(username!!, password!!)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    _userId.value = task.result.user?.uid
+                    _loggedUser.value = task.result.user?.email?.split("@")?.get(0)
+                    _goToNext.value = true
+                    modifyProcessing()
+                    setUserEnterError(false)
+                } else {
+                    _goToNext.value = false
+                }
+            }
+            .addOnFailureListener {
+                setUserEnterError(true)
+            }
+    }
+
+    fun register(username: String, password: String) {
+        auth.createUserWithEmailAndPassword(username, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    _userId.value = task.result.user?.uid
+                    _loggedUser.value = task.result.user?.email?.split("@")?.get(0)
+                    _goToNext.value = task.isSuccessful
+                    modifyProcessing()
+                    setUserEnterError(false)
+                } else {
+                    _goToNext.value = false
+                }
+            }
+            .addOnFailureListener {
+                setUserEnterError(true)
+            }
+    }
+
+    fun logout() {
+        _userId.value = null
+        _loggedUser.value = null
+        _goToNext.value = false
+        modifyProcessing()
+        auth.signOut()
+    }
+
+    fun modifyProcessing() {
+        _isProcessing.value = !_isProcessing.value!!
+    }
+}
