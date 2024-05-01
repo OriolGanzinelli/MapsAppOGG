@@ -16,52 +16,51 @@ import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.storage.FirebaseStorage
 import com.google.maps.android.compose.MapType
 
-class MyViewModel: ViewModel() {
-
-    // ---------------------------------------------------------- VARIABLES IMMUTABLES PRIVADES -----------------------------------------------------------------------
+// ---------------------------------------------------------- VARIABLES -----------------------------------------------------------------------
+class MyViewModel : ViewModel() {
     private val repository: Repository = Repository()
     private val auth = FirebaseAuth.getInstance()
     private val _trafficEnabled = MutableLiveData(false)
-    private val _selectedMarker = MutableLiveData<Marker?>(null)
-    private val _selectedLocation = MutableLiveData(LatLng(0.0, 0.0))
-    private val _selectedImage = MutableLiveData<Uri?>(null)
-    private val _imageUrl = MutableLiveData<Uri?>(null)
-    private val _markerReady = MutableLiveData(false)
-    private val _userEnterError = MutableLiveData(false)
-    private val _bottomSheet = MutableLiveData(false)
-    private val _goToNext = MutableLiveData(false)
-    private val _isProcessing = MutableLiveData(true)
-    private val _userId = MutableLiveData<String?>(null)
-    private val _loggedUser = MutableLiveData<String?>(null)
-    private val _listOfMarkers = MutableLiveData(mutableListOf<Marker>())
-    private val mapTypes = listOf(MapType.NORMAL, MapType.SATELLITE, MapType.TERRAIN, MapType.HYBRID)
-    private val _selectedMapTypeIndex = MutableLiveData(MapType.TERRAIN)
-    private val _cameraPermissionGranted = MutableLiveData(false)
-    private val _shouldShowPermissionRationale = MutableLiveData(false)
-    private val _showPermissionDenied = MutableLiveData(false)
-    private val _locationPermissionGranted = MutableLiveData(false)
-    private val _shouldShowLocationPermissionRationale = MutableLiveData(false)
-    private val _locationPermissionDenied = MutableLiveData(false)
-
-    // ---------------------------------------------------------- VARIABLES IMMUTABLES -----------------------------------------------------------------------
-
     val trafficEnabled = _trafficEnabled
+    private val _selectedMarker = MutableLiveData<Marker?>(null)
     val selectedMarker = _selectedMarker
+    private val _selectedLocation = MutableLiveData(LatLng(0.0, 0.0))
     val selectedLocation = _selectedLocation
+    private val _selectedImage = MutableLiveData<Uri?>(null)
     val selectedImage = _selectedImage
+    private val _imageUrl = MutableLiveData<Uri?>(null)
     val imageUrl = _imageUrl
+    private val _markerReady = MutableLiveData(false)
     val markerReady = _markerReady
+    private val _userEnterError = MutableLiveData(false)
     val userEnterError = _userEnterError
+    private val _bottomSheet = MutableLiveData(false)
     val bottomSheet = _bottomSheet
+    private val _goToNext = MutableLiveData(false)
     val goToNext = _goToNext
+    private val _isProcessing = MutableLiveData(true)
     val isProcessing = _isProcessing
+    private val _userId = MutableLiveData<String?>(null)
     val userId = _userId
+    private val _loggedUser = MutableLiveData<String?>(null)
     val loggedUser = _loggedUser
+    private val _listOfMarkers = MutableLiveData(mutableListOf<Marker>())
     val listOfMarkers = _listOfMarkers
+    private val mapTypes =
+        listOf(MapType.NORMAL, MapType.SATELLITE, MapType.TERRAIN, MapType.HYBRID)
+    private val _selectedMapTypeIndex = MutableLiveData(MapType.TERRAIN)
     val selectedMapType = _selectedMapTypeIndex
+    private val _cameraPermissionGranted = MutableLiveData(false)
+    val cameraPermissionGranted = _cameraPermissionGranted
+    private val _shouldShowPermissionRationale = MutableLiveData(false)
+    val shouldShowPermissionRationale = _shouldShowPermissionRationale
+    private val _showPermissionDenied = MutableLiveData(false)
     val showPermissionDenied = _showPermissionDenied
+    private val _locationPermissionGranted = MutableLiveData(false)
     val locationPermissionGranted = _locationPermissionGranted
+    private val _shouldShowLocationPermissionRationale = MutableLiveData(false)
     val shouldShowLocationPermissionRationale = _shouldShowLocationPermissionRationale
+    private val _locationPermissionDenied = MutableLiveData(false)
     val locationPermissionDenied = _locationPermissionDenied
 
     // ---------------------------------------------------------- BUSCAR MARCADORS -----------------------------------------------------------------------
@@ -69,42 +68,44 @@ class MyViewModel: ViewModel() {
     val isSearching = _isSearching
     private val _searchText = MutableLiveData("")
     val searchText = _searchText
-
     private val _filterColors = MutableLiveData(listOf<Float>())
     val filterColors = _filterColors
-
     private val _isFiltering = MutableLiveData(false)
     val isFiltering = _isFiltering
     fun enableTraffic() {
         _trafficEnabled.value = !_trafficEnabled.value!!
     }
 
-    // ---------------------------------------------------------- BUSCAR MARCADORS PER NOM -----------------------------------------------------------------------
-    fun onSearchTextChange(text: String){
+    // ---------------------------------------------------------- EVITAR ERROR JAVA LANG -----------------------------------------------------------------------
+    fun onSearchTextChange(text: String) {
         _searchText.value = text
     }
 
     fun confirmMarkerReady(save: Boolean) {
         _markerReady.value = save
     }
-    fun getSavedMarkers(){
-        var getMarkers = repository.getMarkers().whereEqualTo("userId", userId.value)
-        if (filterColors.value!!.isNotEmpty()) getMarkers = getMarkers.whereIn("markerColor", filterColors.value!!)
 
-        getMarkers.addSnapshotListener(object: EventListener<QuerySnapshot> {
+    fun getSavedMarkers() {
+        var getMarkers = repository.getMarkers().whereEqualTo("userId", userId.value)
+        if (filterColors.value!!.isNotEmpty()) getMarkers =
+            getMarkers.whereIn("markerColor", filterColors.value!!)
+
+        getMarkers.addSnapshotListener(object : EventListener<QuerySnapshot> {
             override fun onEvent(value: QuerySnapshot?, error: FirebaseFirestoreException?) {
-                if(error != null){
+                if (error != null) {
                     Log.e("Firestore error", error.message.toString())
                     return //@addSnapshotListener
                 }
                 val tempList = mutableListOf<Marker>()
-                for(dc: DocumentChange in value?.documentChanges!!){
-                    if(dc.type == DocumentChange.Type.ADDED){
+                for (dc: DocumentChange in value?.documentChanges!!) {
+                    if (dc.type == DocumentChange.Type.ADDED) {
                         val newMarker = Marker(
                             dc.document.get("userId").toString(),
                             dc.document.id,
-                            LatLng(dc.document.get("markerLatitude")!!.toString().toDouble(),
-                                dc.document.get("markerLongitude")!!.toString().toDouble()),
+                            LatLng(
+                                dc.document.get("markerLatitude")!!.toString().toDouble(),
+                                dc.document.get("markerLongitude")!!.toString().toDouble()
+                            ),
                             dc.document.get("markerTitle")!!.toString(),
                             dc.document.get("markerSnippet")!!.toString(),
                             dc.document.get("markerColor")!!.toString().toFloat(),
@@ -147,9 +148,11 @@ class MyViewModel: ViewModel() {
     fun setCameraPermissionGranted(granted: Boolean) {
         this._cameraPermissionGranted.value = granted
     }
+
     fun setShouldPermissionRationale(should: Boolean) {
         _shouldShowPermissionRationale.value = should
     }
+
     fun setShowPermissionDenied(denied: Boolean) {
         _showPermissionDenied.value = denied
     }
@@ -157,9 +160,11 @@ class MyViewModel: ViewModel() {
     fun setLocationPermissionGranted(granted: Boolean) {
         this._locationPermissionGranted.value = granted
     }
+
     fun setShouldLocationPermissionRationale(should: Boolean) {
         _shouldShowLocationPermissionRationale.value = should
     }
+
     fun setShowLocationPermissionDenied(denied: Boolean) {
         _locationPermissionDenied.value = denied
     }
@@ -176,7 +181,10 @@ class MyViewModel: ViewModel() {
         repository.deleteMarker(deletedMarker)
     }
 
-    fun showBottomSheet() { _bottomSheet.value = true }
+    fun showBottomSheet() {
+        _bottomSheet.value = true
+    }
+
     fun hideBottomSheet() {
         _bottomSheet.value = false
         selectImage(null)
@@ -184,7 +192,7 @@ class MyViewModel: ViewModel() {
 
     fun uploadImage(imageUri: Uri?, fileName: String, deleteUrl: String?) {
         val storage = FirebaseStorage.getInstance().getReference("images/$fileName")
-        storage.putFile(imageUri?: "null".toUri())
+        storage.putFile(imageUri ?: "null".toUri())
             .addOnSuccessListener {
                 Log.i("IMAGE UPLOAD", "Image uploaded successfully")
                 storage.downloadUrl.addOnSuccessListener {
@@ -206,7 +214,10 @@ class MyViewModel: ViewModel() {
             val storage = FirebaseStorage.getInstance().getReferenceFromUrl(url)
             storage.delete()
         } catch (_: IllegalArgumentException) {
-            Log.i("removeImage", "Caught an IllegalArgumentException (probably tried to remove a null image)")
+            Log.i(
+                "removeImage",
+                "Caught an IllegalArgumentException (probably tried to remove a null image)"
+            )
         }
 
     }
