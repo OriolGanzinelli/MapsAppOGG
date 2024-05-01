@@ -39,10 +39,7 @@ import com.example.mapsappogg.routes.Routes
 import com.example.mapsappogg.viewmodel.MyViewModel
 import com.google.android.gms.maps.model.LatLng
 
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalGlideComposeApi::class
-)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
 @Composable
 fun AddMarkerBottomSheet(
     myViewModel: MyViewModel,
