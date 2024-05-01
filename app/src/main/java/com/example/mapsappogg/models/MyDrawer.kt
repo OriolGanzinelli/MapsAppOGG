@@ -56,10 +56,9 @@ fun MyDrawer(myViewModel: MyViewModel, mainNavController: NavController) {
     val state: DrawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val loggedUser by myViewModel.loggedUser.observeAsState("")
 
-    val trafficEnabled by myViewModel.trafficEnabled.observeAsState(false)
-
-    var mapTypeText by remember { mutableStateOf("TERRAIN") }
-    val mapTypeList: List<String> = listOf("NORMAL", "SATELLITE", "TERRAIN", "HYBRID")
+    val mapList: List<String> = listOf("NORMAL", "SATELLITE", "TERRAIN", "HYBRID")
+    var mapText by remember { mutableStateOf("TERRAIN") }
+    val traffic by myViewModel.trafficEnabled.observeAsState(false)
     var expanded by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
@@ -108,7 +107,7 @@ fun MyDrawer(myViewModel: MyViewModel, mainNavController: NavController) {
                             .fillMaxWidth(0.5f)
                     ) {
                         OutlinedTextField(
-                            value = mapTypeText,
+                            value = mapText,
                             onValueChange = {},
                             enabled = false,
                             readOnly = true,
@@ -130,7 +129,7 @@ fun MyDrawer(myViewModel: MyViewModel, mainNavController: NavController) {
                             expanded = expanded,
                             onDismissRequest = { expanded = false }
                         ) {
-                            mapTypeList.forEach { option ->
+                            mapList.forEach { option ->
                                 DropdownMenuItem(
                                     text = {
                                         Text(
@@ -141,8 +140,8 @@ fun MyDrawer(myViewModel: MyViewModel, mainNavController: NavController) {
                                     },
                                     onClick = {
                                         expanded = false
-                                        myViewModel.changeMapType(mapTypeList.indexOf(option))
-                                        mapTypeText = option
+                                        myViewModel.changeMapType(mapList.indexOf(option))
+                                        mapText = option
                                     }
                                 )
                             }
@@ -155,7 +154,7 @@ fun MyDrawer(myViewModel: MyViewModel, mainNavController: NavController) {
                 ) {
                     Text("TRAFFIC ROADS", modifier = Modifier.padding(15.dp))
                     Checkbox(
-                        checked = trafficEnabled,
+                        checked = traffic,
                         onCheckedChange = { myViewModel.enableTraffic() }
                     )
                 }

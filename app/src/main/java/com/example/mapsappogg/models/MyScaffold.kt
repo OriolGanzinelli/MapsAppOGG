@@ -130,7 +130,7 @@ fun MyScaffold(myViewModel: MyViewModel, navController: NavController, state: Dr
 fun MyTopAppBar(myViewModel: MyViewModel, state: DrawerState) {
     val scope = rememberCoroutineScope()
     TopAppBar(
-        title = { Text("MAPS APP By: OGG") },
+        title = { Text("MAPS APP OGG") },
         colors = TopAppBarDefaults.topAppBarColors(),
         navigationIcon = {
             IconButton(onClick = {

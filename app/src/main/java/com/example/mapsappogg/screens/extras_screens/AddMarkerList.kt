@@ -86,11 +86,6 @@ fun AddMarkerBottomSheet(
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
-                    Image(
-                        painterResource(id = R.drawable.logomaps),
-                        "ICON MAP",
-                        Modifier.fillMaxSize()
-                    )
                 }
                 IconButton(onClick = {
                     myViewModel.hideBottomSheet()
